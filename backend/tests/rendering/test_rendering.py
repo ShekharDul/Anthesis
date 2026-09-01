@@ -122,6 +122,7 @@ def test_render_has_plain_background_and_song_specific_artwork() -> None:
         ({"width": 100}, "dimensions"),
         ({"supersampling": 5}, "supersampling"),
         ({"paper_grain": 0.2}, "paper_grain"),
+        ({"width": 4_096, "height": 4_096, "supersampling": 2}, "20 million"),
     ],
 )
 def test_render_config_rejects_unsafe_values(kwargs: dict[str, float], message: str) -> None:

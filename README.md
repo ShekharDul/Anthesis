@@ -12,8 +12,9 @@ compositing.
 
 ## Project status
 
-Anthesis is under active development. The initial repository foundation is in
-place; the audio-analysis and rendering engines are being built incrementally.
+The deterministic analysis pipeline, MusicGenome, botanical mapper, concept-art
+renderer, CLI, and local API are operational. The browser experience and final
+validation are under active development.
 
 ## Product principles
 
@@ -51,6 +52,21 @@ npm install
 
 Run all local checks from an activated virtual environment with
 `scripts/check.ps1` on Windows or `scripts/check.sh` on macOS and Linux.
+
+Generate a flower and its inspectable analysis:
+
+```powershell
+.\.venv\Scripts\anthesis.exe generate .\song.wav --output .\flower.png
+```
+
+Run the local API and open its interactive documentation at
+`http://127.0.0.1:8000/docs`:
+
+```powershell
+.\.venv\Scripts\anthesis.exe serve
+```
+
+See [CLI and local API](docs/interfaces.md) for interface details.
 
 ## License
 

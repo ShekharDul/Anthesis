@@ -19,5 +19,8 @@ class RenderConfig:
             raise ValueError("render dimensions must be between 128 and 4096 pixels")
         if not 1 <= self.supersampling <= 4:
             raise ValueError("supersampling must be between one and four")
+        working_pixels = self.width * self.height * self.supersampling**2
+        if working_pixels > 20_000_000:
+            raise ValueError("render working canvas cannot exceed 20 million pixels")
         if not 0.0 <= self.paper_grain <= 0.08:
             raise ValueError("paper_grain must be between zero and 0.08")

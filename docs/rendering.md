@@ -29,5 +29,6 @@ underlying flower.
 PNG files contain the renderer version and flower-blueprint digest as metadata.
 The default output is 900 × 1200 pixels with 2× supersampling. Dimensions,
 quality, and paper grain are bounded to prevent accidental excessive memory
-use. Identical blueprint, renderer version, and render settings produce
+use; the supersampled working canvas cannot exceed 20 million pixels. Identical
+blueprint, renderer version, and render settings produce
 identical PNG bytes in the supported environment.
