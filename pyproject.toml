@@ -47,6 +47,7 @@ packages = ["backend/src/anthesis"]
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config -ra"
 testpaths = ["backend/tests"]
+cache_dir = "artifacts/.pytest_cache"
 
 [tool.coverage.run]
 branch = true
@@ -65,6 +66,6 @@ src = ["backend/src", "backend/tests"]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 strict = true
 files = ["backend/src", "backend/tests"]

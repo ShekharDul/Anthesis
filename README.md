@@ -41,8 +41,16 @@ scripts/        Cross-platform development helpers
 - npm 10 or newer
 - FFmpeg available on `PATH` for broad audio-format support
 
-Development commands and installation instructions will be expanded as the
-first executable pipeline lands.
+Create a virtual environment and install the backend and frontend dependencies:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+npm install
+```
+
+Run all local checks from an activated virtual environment with
+`scripts/check.ps1` on Windows or `scripts/check.sh` on macOS and Linux.
 
 ## License
 

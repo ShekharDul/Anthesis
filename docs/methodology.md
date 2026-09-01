@@ -15,6 +15,25 @@ It does not claim to determine the private feeling of every listener.
 - Form: recurrence, novelty, boundaries, contrast, climax, and resolution
 - Expectation: local uncertainty and event surprisal
 
+## Canonical audio
+
+Every recording first enters a versioned deterministic representation:
+
+1. inspect and decode with libsndfile without invoking a shell;
+2. downmix channels while retaining a stereo-width descriptor;
+3. remove DC offset and resample to 22,050 Hz with high-quality SoX resampling;
+4. trim leading and trailing silence relative to the recording's own peak;
+5. center again and peak-normalize to 0.98;
+6. hash quantized canonical PCM for exact-run provenance.
+
+The current limits are 512 MiB and fifteen minutes. MP3, WAV, FLAC, OGG and
+other formats exposed by the installed libsndfile build are accepted.
+
+The canonical signal is then separated into harmonic and percussive components
+with median-filter HPSS. This deterministic technique classifies horizontal
+spectrogram structures as tonal and vertical structures as transient. Any
+unassigned reconstruction remainder is retained explicitly.
+
 Measurements are retained as time-varying curves before robust summary. The
 initial expressive model will be transparent and manually specified. It will
 combine multiple cues, attach confidence, and expose its limitations.
