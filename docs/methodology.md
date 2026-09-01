@@ -3,7 +3,7 @@
 Anthesis estimates expressive information communicated by an audio recording.
 It does not claim to determine the private feeling of every listener.
 
-## Planned measurement families
+## Measurement families
 
 - Dynamics: loudness, dynamic range, crest factor, accents, and trajectories
 - Rhythm: tempo, onset density, pulse clarity, regularity, and syncopation
@@ -52,9 +52,34 @@ The same compact measurements are median-aggregated between detected beats.
 An interval aggregation method accepts future structural boundaries without
 coupling feature extraction to the next stage's segmentation algorithm.
 
-Measurements are retained as time-varying curves before robust summary. The
-initial expressive model will be transparent and manually specified. It will
-combine multiple cues, attach confidence, and expose its limitations.
+Measurements are retained as time-varying curves before robust summary.
+
+## Form and expressive trajectories
+
+Song form is estimated from a cosine self-similarity matrix over robustly
+standardized dynamics, timbre, harmony, and chroma features. A local novelty
+curve compares the similarity inside adjacent windows with the similarity
+across them. Prominent, sufficiently separated peaks become section
+boundaries; median section signatures identify recurring passages.
+
+The expressive layer uses fixed, documented weighted combinations rather than
+a learned model:
+
+- arousal combines energy, tempo, onset rate, flux, brightness, percussion,
+  and pulse clarity;
+- valence combines mode evidence, tonal strength, consonance, harmonic
+  stability, brightness, and energy;
+- tension combines roughness, harmonic change, chroma entropy, flux, onset
+  activity, and residual texture;
+- complexity, sublimity, vitality, and unease are derived from the same
+  inspectable cues and detected formal complexity.
+
+All curves are gently smoothed on the compact timeline and remain available
+alongside their summaries. Valence and arousal receive separate confidence
+curves. Tonal clarity, pitch confidence, harmonic balance, pulse clarity,
+beat regularity, silence, and signal energy determine those confidences.
+These values describe expression in the recording; they do not infer a
+listener's private emotional state.
 
 ## Identity and uniqueness
 
@@ -63,6 +88,14 @@ similar emotions. Anthesis therefore uses a separate, robust spectral-landmark
 fingerprint to seed bounded micro-geometry. This makes visual collision
 negligible in practice while preserving meaningful similarity at the level of
 the overall flower.
+
+The fingerprint locates stable local maxima in a log-magnitude spectrogram,
+pairs peaks within a fixed time fan-out, and hashes anchor frequency, target
+frequency, and time difference. The smallest unique pair hashes form a stable
+signature for similarity comparisons. The signature, duration, and exact
+canonical PCM digest generate a 128-bit procedural seed. This keeps robust
+recording similarity separate from the exact identity material that prevents
+distinct canonical inputs from sharing a flower in practice.
 
 ## Validation
 
