@@ -35,13 +35,17 @@ must not import API or frontend code.
 
 A versioned Pydantic model containing normalized global descriptors,
 time-varying curves, structural sections, identity material, confidence, and
-provenance. Schema changes require versioning and migration consideration.
+provenance. It contains no source path or audio samples and can round-trip
+strictly through JSON. Schema changes require versioning and migration
+consideration. See [MusicGenome and flower mapping](music-genome.md).
 
 ### Flower system
 
 The mapper converts MusicGenome values into bounded botanical parameters. The
 geometry layer builds a single flower and stem. The paint layer rasterizes it
-with deterministic procedural media.
+with deterministic procedural media. Musical descriptors determine macro-form;
+identity-derived values are reserved for restrained variation and seeded
+micro-geometry.
 
 ### Delivery surfaces
 
