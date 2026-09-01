@@ -13,8 +13,8 @@ compositing.
 ## Project status
 
 The deterministic analysis pipeline, MusicGenome, botanical mapper, concept-art
-renderer, CLI, and local API are operational. The browser experience and final
-validation are under active development.
+renderer, CLI, local API, and browser workflow are operational. Final hardening
+and release validation are under active development.
 
 ## Product principles
 
@@ -67,6 +67,9 @@ Run the local API and open its interactive documentation at
 ```
 
 See [CLI and local API](docs/interfaces.md) for interface details.
+
+For the browser workflow, run the API as above and start Vite in a second
+terminal with `npm run dev`. See [Browser experience](docs/web-experience.md).
 
 ## License
 
