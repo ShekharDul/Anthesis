@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# Node
+node_modules/
+.npm-cache/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+
+# Generated Anthesis data
+artifacts/
+uploads/
+*.anthesis.json
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
