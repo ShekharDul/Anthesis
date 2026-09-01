@@ -34,6 +34,24 @@ with median-filter HPSS. This deterministic technique classifies horizontal
 spectrogram structures as tonal and vertical structures as transient. Any
 unassigned reconstruction remainder is retained explicitly.
 
+## Compact musical features
+
+The feature engine first works at the STFT rate and then robustly aggregates
+measurements onto an approximately 2 Hz timeline. It retains:
+
+- relative RMS and crest factor for dynamics;
+- onset strength, onset rate, tempo, pulse clarity and beat regularity;
+- spectral centroid, bandwidth, rolloff, flatness, flux and thirteen MFCCs;
+- predominant pitch and its spectral confidence;
+- normalized chroma, key/mode evidence, chroma entropy and harmonic change;
+- six tonal-centroid coordinates;
+- harmonic, percussive and residual energy proportions;
+- silence proportion and Sethares-style spectral roughness.
+
+The same compact measurements are median-aggregated between detected beats.
+An interval aggregation method accepts future structural boundaries without
+coupling feature extraction to the next stage's segmentation algorithm.
+
 Measurements are retained as time-varying curves before robust summary. The
 initial expressive model will be transparent and manually specified. It will
 combine multiple cues, attach confidence, and expose its limitations.
