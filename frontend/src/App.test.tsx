@@ -107,4 +107,22 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("could not be decoded"))
     expect(screen.getByRole("button", { name: "Grow this song" })).toBeEnabled()
   })
+
+  it("rejects malformed service responses", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ image: {} }), { status: 200 })))
+    render(<App />)
+    chooseAudio()
+    fireEvent.click(screen.getByRole("button", { name: "Grow this song" }))
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("invalid generation result"))
+  })
+
+  it("explains when the local service is unavailable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")))
+    render(<App />)
+    chooseAudio()
+    fireEvent.click(screen.getByRole("button", { name: "Grow this song" }))
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("service is unavailable"))
+  })
 })

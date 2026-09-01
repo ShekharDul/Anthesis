@@ -1,12 +1,19 @@
 import base64
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from pathlib import Path
+from typing import NoReturn
 
 import numpy as np
+import pytest
 import soundfile as sf  # type: ignore[import-untyped]
 from fastapi.testclient import TestClient
 from PIL import Image
 
+import anthesis.api as api_module
 from anthesis.api import create_app
+from anthesis.audio.errors import SilentAudioError
 
 
 def _wave_bytes(*, silent: bool = False) -> bytes:
@@ -27,6 +34,9 @@ def test_health_and_openapi_are_available() -> None:
 
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
+    assert health.headers["cache-control"] == "no-store"
+    assert health.headers["x-content-type-options"] == "nosniff"
+    assert health.headers["x-frame-options"] == "DENY"
     assert "/api/v1/generate" in schema.json()["paths"]
 
 
@@ -61,3 +71,69 @@ def test_audio_errors_are_safe_and_structured() -> None:
     assert empty.json()["detail"]["code"] == "empty_upload"
     assert silent.status_code == 422
     assert silent.json()["code"] == "SilentAudioError"
+
+
+def test_upload_limit_is_enforced_while_streaming(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api_module, "MAX_WEB_UPLOAD_BYTES", 8)
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/api/v1/analyze",
+            files={"audio": ("large.wav", b"123456789", "audio/wav")},
+        )
+
+    assert response.status_code == 413
+    assert response.json()["detail"]["code"] == "upload_too_large"
+
+
+def test_decode_errors_do_not_disclose_temporary_paths() -> None:
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/api/v1/analyze",
+            files={"audio": ("broken.wav", b"not an audio container", "audio/wav")},
+        )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "AudioDecodeError"
+    assert "anthesis-upload" not in response.json()["message"]
+
+
+def test_processing_concurrency_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    release = threading.Event()
+    both_started = threading.Event()
+    lock = threading.Lock()
+    started = 0
+
+    def slow_analysis(_path: Path) -> NoReturn:
+        nonlocal started
+        with lock:
+            started += 1
+            if started == 2:
+                both_started.set()
+        release.wait(timeout=2)
+        raise SilentAudioError("test signal")
+
+    monkeypatch.setattr(api_module, "analyze_file", slow_analysis)
+    monkeypatch.setattr(api_module, "PROCESSING_SLOT_TIMEOUT_SECONDS", 0.05)
+    with TestClient(create_app()) as client, ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(
+            client.post,
+            "/api/v1/analyze",
+            files={"audio": ("first.wav", b"staged", "audio/wav")},
+        )
+        second = pool.submit(
+            client.post,
+            "/api/v1/analyze",
+            files={"audio": ("second.wav", b"staged", "audio/wav")},
+        )
+        assert both_started.wait(timeout=2)
+        busy = client.post(
+            "/api/v1/analyze",
+            files={"audio": ("third.wav", b"staged", "audio/wav")},
+        )
+        release.set()
+        assert first.result(timeout=2).status_code == 422
+        assert second.result(timeout=2).status_code == 422
+
+    assert busy.status_code == 503
+    assert busy.headers["retry-after"] == "2"
+    assert busy.json()["detail"]["code"] == "processor_busy"

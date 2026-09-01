@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from anthesis.analysis import AnalysisConfig, analyze_song
 from anthesis.audio import (
@@ -80,6 +80,12 @@ class GenerationManifest(ProcessingModel):
     height: int = Field(ge=128, le=4_096)
     image_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
+    @model_validator(mode="after")
+    def validate_analysis_digest(self) -> GenerationManifest:
+        if self.analysis_digest != self.analysis.digest:
+            raise ValueError("analysis_digest does not match the embedded analysis")
+        return self
+
 
 @dataclass(frozen=True, slots=True)
 class GeneratedFlower:
@@ -87,6 +93,12 @@ class GeneratedFlower:
 
     png: bytes
     manifest: GenerationManifest
+
+    def __post_init__(self) -> None:
+        if not self.png.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise ValueError("generated image is not a PNG")
+        if hashlib.sha256(self.png).hexdigest() != self.manifest.image_sha256:
+            raise ValueError("image_sha256 does not match the generated PNG")
 
 
 def analyze_file(
