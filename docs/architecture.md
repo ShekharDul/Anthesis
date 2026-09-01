@@ -45,7 +45,7 @@ The mapper converts MusicGenome values into bounded botanical parameters. The
 geometry layer builds a single flower and stem. The paint layer rasterizes it
 with deterministic procedural media. Musical descriptors determine macro-form;
 identity-derived values are reserved for restrained variation and seeded
-micro-geometry.
+micro-geometry. See [Deterministic flower rendering](rendering.md).
 
 ### Delivery surfaces
 
