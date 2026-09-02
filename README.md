@@ -12,9 +12,9 @@ compositing.
 
 ## Project status
 
-The deterministic analysis pipeline, MusicGenome, botanical mapper, concept-art
-renderer, CLI, local API, and browser workflow are operational. Final hardening
-is complete; release packaging and examples are under active development.
+Anthesis 0.1.0 is complete. The deterministic analysis pipeline, MusicGenome,
+botanical mapper, concept-art renderer, CLI, local API, browser workflow,
+validation suite, demo, and release packaging are operational.
 
 ## Product principles
 
@@ -59,17 +59,23 @@ Generate a flower and its inspectable analysis:
 .\.venv\Scripts\anthesis.exe generate .\song.wav --output .\flower.png
 ```
 
-Run the local API and open its interactive documentation at
-`http://127.0.0.1:8000/docs`:
+Build and run the complete local browser product:
 
 ```powershell
+npm run build
 .\.venv\Scripts\anthesis.exe serve
 ```
 
-See [CLI and local API](docs/interfaces.md) for interface details.
+Open `http://127.0.0.1:8000`. Interactive API documentation is available at
+`http://127.0.0.1:8000/docs`. See [CLI and local API](docs/interfaces.md) for
+interface details.
 
-For the browser workflow, run the API as above and start Vite in a second
-terminal with `npm run dev`. See [Browser experience](docs/web-experience.md).
+For browser development with hot reload, run the API and `npm run dev` in
+separate terminals. See [Browser experience](docs/web-experience.md).
+
+To try Anthesis without finding an audio file first, see the
+[deterministic demo](examples/README.md). For packaging instructions, see the
+[release guide](docs/release.md).
 
 See [Validation and operational boundaries](docs/validation.md) before exposing
 the local API beyond your own machine.

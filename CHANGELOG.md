@@ -1,0 +1,11 @@
+# Changelog
+
+## 0.1.0 - 2026-09-02
+
+- Added deterministic audio decoding, validation, feature extraction, and MusicGenome analysis.
+- Added traceable music-to-botanical mapping and a seeded concept-art flower renderer.
+- Added CLI analysis and generation workflows with PNG and JSON outputs.
+- Added a local FastAPI service and complete React browser experience.
+- Added bounded processing, safe uploads, browser security headers, and operational guidance.
+- Added golden determinism, artifact-integrity, API, renderer, and browser tests.
+- Added a dependency-free demo song generator and unified production serving.

@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
+from starlette.staticfiles import StaticFiles
 
 from anthesis import __version__
 from anthesis.audio.errors import (
@@ -148,7 +149,11 @@ async def _processing_slot(request: Request) -> AsyncIterator[None]:
         semaphore.release()
 
 
-def create_app() -> FastAPI:
+def _default_web_directory() -> Path:
+    return Path(__file__).resolve().parents[3] / "frontend" / "dist"
+
+
+def create_app(web_directory: Path | None = None) -> FastAPI:
     """Create an isolated application for production and tests."""
 
     application = FastAPI(
@@ -198,6 +203,10 @@ def create_app() -> FastAPI:
             manifest=generated.manifest,
             image=EncodedImage(base64=base64.b64encode(generated.png).decode("ascii")),
         )
+
+    web_root = web_directory or _default_web_directory()
+    if (web_root / "index.html").is_file():
+        application.mount("/", StaticFiles(directory=web_root, html=True), name="web")
 
     return application
 

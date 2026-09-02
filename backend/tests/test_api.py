@@ -40,6 +40,20 @@ def test_health_and_openapi_are_available() -> None:
     assert "/api/v1/generate" in schema.json()["paths"]
 
 
+def test_built_web_experience_is_served_without_hiding_api(tmp_path: Path) -> None:
+    web = tmp_path / "web"
+    web.mkdir()
+    (web / "index.html").write_text("<h1>Anthesis</h1>", encoding="utf-8")
+
+    with TestClient(create_app(web_directory=web)) as client:
+        homepage = client.get("/")
+        health = client.get("/api/v1/health")
+
+    assert homepage.status_code == 200
+    assert "<h1>Anthesis</h1>" in homepage.text
+    assert health.status_code == 200
+
+
 def test_generate_returns_image_and_manifest() -> None:
     with TestClient(create_app()) as client:
         response = client.post(
