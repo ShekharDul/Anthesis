@@ -10,7 +10,7 @@ class FeatureConfig:
     """Controls time-frequency resolution and compact feature sampling."""
 
     n_fft: int = 2_048
-    hop_length: int = 512
+    hop_length: int = 1_024
     n_mels: int = 64
     n_mfcc: int = 13
     output_rate_hz: float = 2.0

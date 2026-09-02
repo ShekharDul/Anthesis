@@ -32,6 +32,8 @@ mistaking legitimate numerical-backend variation for an algorithm regression.
   bound raster memory.
 - The compact feature timeline and maximum genome trajectory size bound later
   structural and serialization work.
+- Harmonic separation and feature extraction reuse the same spectral matrices;
+  regression tests prevent accidental duplicate transforms.
 
 ## Trust boundaries
 

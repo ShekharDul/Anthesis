@@ -38,7 +38,7 @@ class StructureAnalysis:
     recurrence_score: float
     contrast_score: float
     complexity_score: float
-    version: str = "anthesis-structure-v1"
+    version: str = "anthesis-structure-v2"
 
     @property
     def boundaries_seconds(self) -> tuple[float, ...]:

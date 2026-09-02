@@ -14,7 +14,7 @@ class StructureConfig:
     minimum_section_seconds: float = 4.0
     maximum_sections: int = 16
     minimum_peak_prominence: float = 0.05
-    recurrence_threshold: float = 0.82
+    recurrence_threshold: float = 0.80
 
     def __post_init__(self) -> None:
         if self.novelty_half_window_seconds <= 0 or self.novelty_smoothing_seconds < 0:

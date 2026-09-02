@@ -95,7 +95,7 @@ class MusicalFeatures:
     beats: FeatureTable
     globals: Mapping[str, float]
     labels: Mapping[str, str]
-    version: str = "anthesis-features-v1"
+    version: str = "anthesis-features-v2"
 
     def __post_init__(self) -> None:
         numeric = {key: float(value) for key, value in self.globals.items()}

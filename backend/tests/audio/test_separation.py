@@ -35,6 +35,9 @@ def test_hpss_identifies_impulses_as_percussive(tmp_path: Path) -> None:
     assert not components.harmonic.flags.writeable
     assert not components.percussive.flags.writeable
     assert not components.residual.flags.writeable
+    assert not components.spectrum.flags.writeable
+    assert not components.harmonic_spectrum.flags.writeable
+    assert not components.percussive_spectrum.flags.writeable
 
 
 def test_hpss_reconstructs_mixed_signal(tmp_path: Path) -> None:

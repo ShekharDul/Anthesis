@@ -151,33 +151,43 @@ def extract_musical_features(
     separated = components or separate_harmonic_percussive(audio)
     sample_rate = audio.sample_rate
 
-    spectrum = librosa.stft(
-        audio.samples,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-        win_length=settings.n_fft,
-        window="hann",
-        center=True,
-        pad_mode="constant",
+    can_reuse_spectra = (
+        separated.n_fft == settings.n_fft
+        and separated.hop_length == settings.hop_length
+        and separated.win_length == settings.n_fft
     )
-    harmonic_spectrum = librosa.stft(
-        separated.harmonic,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-        win_length=settings.n_fft,
-        window="hann",
-        center=True,
-        pad_mode="constant",
-    )
-    percussive_spectrum = librosa.stft(
-        separated.percussive,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-        win_length=settings.n_fft,
-        window="hann",
-        center=True,
-        pad_mode="constant",
-    )
+    if can_reuse_spectra:
+        spectrum = separated.spectrum
+        harmonic_spectrum = separated.harmonic_spectrum
+        percussive_spectrum = separated.percussive_spectrum
+    else:
+        spectrum = librosa.stft(
+            audio.samples,
+            n_fft=settings.n_fft,
+            hop_length=settings.hop_length,
+            win_length=settings.n_fft,
+            window="hann",
+            center=True,
+            pad_mode="constant",
+        )
+        harmonic_spectrum = librosa.stft(
+            separated.harmonic,
+            n_fft=settings.n_fft,
+            hop_length=settings.hop_length,
+            win_length=settings.n_fft,
+            window="hann",
+            center=True,
+            pad_mode="constant",
+        )
+        percussive_spectrum = librosa.stft(
+            separated.percussive,
+            n_fft=settings.n_fft,
+            hop_length=settings.hop_length,
+            win_length=settings.n_fft,
+            window="hann",
+            center=True,
+            pad_mode="constant",
+        )
     magnitude = np.asarray(np.abs(spectrum), dtype=np.float32)
     harmonic_magnitude = np.asarray(np.abs(harmonic_spectrum), dtype=np.float32)
     percussive_magnitude = np.asarray(np.abs(percussive_spectrum), dtype=np.float32)

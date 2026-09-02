@@ -32,11 +32,14 @@ other formats exposed by the installed libsndfile build are accepted.
 The canonical signal is then separated into harmonic and percussive components
 with median-filter HPSS. This deterministic technique classifies horizontal
 spectrogram structures as tonal and vertical structures as transient. Any
-unassigned reconstruction remainder is retained explicitly.
+unassigned reconstruction remainder is retained explicitly. Separation and
+feature extraction share one 2,048-sample STFT with a 1,024-sample hop instead
+of transforming the same song repeatedly. At 22,050 Hz this retains a roughly
+46 ms observation step before compact aggregation.
 
 ## Compact musical features
 
-The feature engine first works at the STFT rate and then robustly aggregates
+The feature engine first works at that STFT rate and then robustly aggregates
 measurements onto an approximately 2 Hz timeline. It retains:
 
 - relative RMS and crest factor for dynamics;

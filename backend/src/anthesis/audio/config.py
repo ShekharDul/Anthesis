@@ -48,7 +48,7 @@ class SeparationConfig:
     """Controls median-filter harmonic/percussive source separation."""
 
     n_fft: int = 2_048
-    hop_length: int = 512
+    hop_length: int = 1_024
     win_length: int = 2_048
     harmonic_kernel: int = 31
     percussive_kernel: int = 31

@@ -111,6 +111,7 @@ def analyze_file(
     audio = load_audio(audio_path, settings.audio)
     components = separate_harmonic_percussive(audio, settings.separation)
     features = extract_musical_features(audio, components, settings.features)
+    del components
     analysis = analyze_song(audio, features, settings.analysis)
     genome = build_music_genome(audio, features, analysis, settings.genome)
     flower = map_genome_to_flower(genome)

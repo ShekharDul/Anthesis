@@ -52,3 +52,18 @@ def test_feature_engine_is_deterministic_and_supports_section_aggregation(tmp_pa
     assert first.digest == second.digest
     assert np.array_equal(first.frames.values, second.frames.values)
     assert sections.values.shape == (3, first.frames.values.shape[1])
+
+
+def test_feature_engine_reuses_separation_spectra(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    audio, components = _musical_fixture(tmp_path)
+
+    def unexpected_stft(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("feature extraction recomputed a shared STFT")
+
+    monkeypatch.setattr("anthesis.features.extractor.librosa.stft", unexpected_stft)
+
+    features = extract_musical_features(audio, components)
+
+    assert features.frames.times.size > 0
