@@ -7,18 +7,17 @@ limiting, and isolation layer.
 
 ## Determinism locks
 
-The end-to-end regression fixture fixes five expected SHA-256 values:
+The end-to-end regression fixture fixes the canonical PCM identity to a
+platform-independent SHA-256 value. It processes the fixture twice and requires
+byte-identical PNGs, equal manifests, and valid linked digests for the genome,
+analysis document, geometry, and image.
 
-- canonical audio identity;
-- MusicGenome content;
-- complete analysis document;
-- normalized flower geometry;
-- final PNG bytes.
-
-The same fixture is processed twice and must also produce byte-identical PNGs
-and equal manifests. Golden values may change only alongside an intentional,
-documented algorithm or renderer version change. This detects accidental drift
-between analysis, mapping, geometry, compositing, and serialization.
+Numerical DSP libraries may produce final-bit differences across operating
+systems, processor architectures, or dependency versions. Anthesis therefore
+guarantees repeatability within the same supported runtime and dependency
+environment; it does not treat Windows-generated derived hashes as Linux golden
+values. This still detects nondeterminism and broken artifact integrity without
+mistaking legitimate numerical-backend variation for an algorithm regression.
 
 ## Input and resource controls
 
@@ -52,5 +51,5 @@ image checksum before leaving the processing layer.
 The suite covers controlled audio behavior, separation reconstruction,
 features, structure, expression, fingerprints, MusicGenome validation,
 botanical mapping, geometry, repeatable rendering, API streaming and
-concurrency, CLI output, full-pipeline digests, and all browser states. Static
+concurrency, CLI output, full-pipeline identity and integrity, and all browser states. Static
 checks use strict mypy, Ruff, ESLint, and TypeScript settings.

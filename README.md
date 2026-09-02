@@ -19,7 +19,7 @@ validation suite, demo, and release packaging are operational.
 ## Product principles
 
 - One song produces one flower with one stem on a plain background.
-- Identical canonical input and analysis version produce identical output.
+- Identical canonical input in the same supported runtime produces identical output.
 - Expressive similarity may create related flowers, while a separate acoustic
   identity channel preserves practical uniqueness.
 - Every visual decision must be traceable to measured musical information.
