@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import numpy as np
+from numpy.typing import NDArray
+
 from anthesis.analysis.config import AnalysisConfig
 from anthesis.analysis.expression import analyze_expression
 from anthesis.analysis.fingerprint import fingerprint_audio
@@ -15,13 +18,19 @@ def analyze_song(
     audio: CanonicalAudio,
     features: MusicalFeatures,
     config: AnalysisConfig | None = None,
+    *,
+    fingerprint_magnitude: NDArray[np.float32] | None = None,
 ) -> SongAnalysis:
     """Run structure, expression, and identity analysis in dependency order."""
 
     settings = config or AnalysisConfig()
     structure = analyze_structure(features, settings.structure)
     expression = analyze_expression(features, structure)
-    fingerprint = fingerprint_audio(audio, settings.fingerprint)
+    fingerprint = fingerprint_audio(
+        audio,
+        settings.fingerprint,
+        magnitude=fingerprint_magnitude,
+    )
     return SongAnalysis(
         structure=structure,
         expression=expression,

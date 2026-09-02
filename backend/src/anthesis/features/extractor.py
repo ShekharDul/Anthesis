@@ -30,19 +30,6 @@ def _align_frames(values: NDArray[np.float32], frame_count: int) -> NDArray[np.f
     return np.pad(values, ((0, 0), (0, frame_count - values.shape[1])), mode="edge")
 
 
-def _frame_peaks(
-    samples: NDArray[np.float32],
-    *,
-    n_fft: int,
-    hop_length: int,
-    frame_count: int,
-) -> NDArray[np.float32]:
-    padded = np.pad(samples, n_fft // 2, mode="constant")
-    framed = librosa.util.frame(padded, frame_length=n_fft, hop_length=hop_length)
-    peaks = np.max(np.abs(framed), axis=0, keepdims=True).astype(np.float32)
-    return _align_frames(peaks, frame_count)
-
-
 def _spectral_flux(magnitude: NDArray[np.float32]) -> NDArray[np.float32]:
     normalized = magnitude / np.maximum(np.sum(magnitude, axis=0, keepdims=True), _EPSILON)
     positive_difference = np.maximum(np.diff(normalized, axis=1), 0.0)
@@ -50,51 +37,29 @@ def _spectral_flux(magnitude: NDArray[np.float32]) -> NDArray[np.float32]:
     return np.asarray(np.concatenate(([0.0], flux))[None, :], dtype=np.float32)
 
 
-def _predominant_pitch(
+def _spectral_peak_confidence(
     harmonic_magnitude: NDArray[np.float32],
-    *,
-    sample_rate: int,
-    n_fft: int,
-    hop_length: int,
-) -> tuple[NDArray[np.float32], NDArray[np.float32]]:
-    pitches, magnitudes = librosa.piptrack(
-        S=harmonic_magnitude,
-        sr=sample_rate,
-        n_fft=n_fft,
-        hop_length=hop_length,
-        fmin=40.0,
-        fmax=min(5_000.0, sample_rate * 0.45),
-        threshold=0.1,
-    )
-    strongest = np.argmax(magnitudes, axis=0)
-    indices = np.arange(magnitudes.shape[1])
-    peak_magnitude = magnitudes[strongest, indices]
-    pitch = pitches[strongest, indices]
-    pitch = np.where(peak_magnitude > _EPSILON, pitch, 0.0)
-    confidence = peak_magnitude / np.maximum(np.sum(magnitudes, axis=0), _EPSILON)
-    return (
-        np.asarray(pitch[None, :], dtype=np.float32),
-        np.asarray(confidence[None, :], dtype=np.float32),
-    )
+) -> NDArray[np.float32]:
+    """Measure tonal focus without constructing a redundant pitch matrix."""
+
+    peak = np.max(harmonic_magnitude, axis=0, keepdims=True)
+    total = np.sum(harmonic_magnitude, axis=0, keepdims=True)
+    return np.asarray(peak / np.maximum(total, _EPSILON), dtype=np.float32)
 
 
 def _component_ratios(
     components: AudioComponents,
-    *,
-    n_fft: int,
-    hop_length: int,
-    frame_count: int,
 ) -> NDArray[np.float32]:
-    component_rms = []
-    for samples in (components.harmonic, components.percussive, components.residual):
-        rms = librosa.feature.rms(
-            y=samples,
-            frame_length=n_fft,
-            hop_length=hop_length,
-            center=True,
-        ).astype(np.float32)
-        component_rms.append(_align_frames(rms, frame_count))
-    energies = np.square(np.concatenate(component_rms, axis=0))
+    energies = np.stack(
+        [
+            np.sum(np.square(component), axis=0)
+            for component in (
+                components.harmonic_magnitude,
+                components.percussive_magnitude,
+                components.residual_magnitude,
+            )
+        ]
+    )
     ratios = energies / np.maximum(np.sum(energies, axis=0, keepdims=True), _EPSILON)
     return np.asarray(ratios, dtype=np.float32)
 
@@ -151,61 +116,21 @@ def extract_musical_features(
     separated = components or separate_harmonic_percussive(audio)
     sample_rate = audio.sample_rate
 
-    can_reuse_spectra = (
+    compatible_spectra = (
         separated.n_fft == settings.n_fft
         and separated.hop_length == settings.hop_length
         and separated.win_length == settings.n_fft
     )
-    if can_reuse_spectra:
-        spectrum = separated.spectrum
-        harmonic_spectrum = separated.harmonic_spectrum
-        percussive_spectrum = separated.percussive_spectrum
-    else:
-        spectrum = librosa.stft(
-            audio.samples,
-            n_fft=settings.n_fft,
-            hop_length=settings.hop_length,
-            win_length=settings.n_fft,
-            window="hann",
-            center=True,
-            pad_mode="constant",
-        )
-        harmonic_spectrum = librosa.stft(
-            separated.harmonic,
-            n_fft=settings.n_fft,
-            hop_length=settings.hop_length,
-            win_length=settings.n_fft,
-            window="hann",
-            center=True,
-            pad_mode="constant",
-        )
-        percussive_spectrum = librosa.stft(
-            separated.percussive,
-            n_fft=settings.n_fft,
-            hop_length=settings.hop_length,
-            win_length=settings.n_fft,
-            window="hann",
-            center=True,
-            pad_mode="constant",
-        )
-    magnitude = np.asarray(np.abs(spectrum), dtype=np.float32)
-    harmonic_magnitude = np.asarray(np.abs(harmonic_spectrum), dtype=np.float32)
-    percussive_magnitude = np.asarray(np.abs(percussive_spectrum), dtype=np.float32)
+    if not compatible_spectra:
+        raise ValueError("feature and separation spectral resolutions must match")
+    magnitude = separated.magnitude
+    harmonic_magnitude = separated.harmonic_magnitude
+    percussive_magnitude = separated.percussive_magnitude
     frame_count = magnitude.shape[1]
 
     rms = librosa.feature.rms(S=magnitude, frame_length=settings.n_fft).astype(np.float32)
     rms_db = librosa.amplitude_to_db(rms, ref=np.max, top_db=100).astype(np.float32)
-    crest = _frame_peaks(
-        audio.samples,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-        frame_count=frame_count,
-    ) / np.maximum(rms, _EPSILON)
     centroid = librosa.feature.spectral_centroid(S=magnitude, sr=sample_rate).astype(np.float32)
-    bandwidth = librosa.feature.spectral_bandwidth(S=magnitude, sr=sample_rate).astype(np.float32)
-    rolloff = librosa.feature.spectral_rolloff(
-        S=magnitude, sr=sample_rate, roll_percent=settings.rolloff_percent
-    ).astype(np.float32)
     flatness = librosa.feature.spectral_flatness(S=magnitude).astype(np.float32)
     flux = _spectral_flux(magnitude)
     onset_envelope = librosa.onset.onset_strength(
@@ -226,12 +151,7 @@ def extract_musical_features(
     onset_indicator = np.zeros((1, frame_count), dtype=np.float32)
     onset_indicator[0, onset_frames[onset_frames < frame_count]] = 1.0
 
-    pitch, pitch_confidence = _predominant_pitch(
-        harmonic_magnitude,
-        sample_rate=sample_rate,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-    )
+    pitch_confidence = _spectral_peak_confidence(harmonic_magnitude)
     chroma = librosa.feature.chroma_stft(
         S=np.square(harmonic_magnitude),
         sr=sample_rate,
@@ -248,12 +168,7 @@ def extract_musical_features(
         S=librosa.power_to_db(mel_power, ref=np.max),
         n_mfcc=settings.n_mfcc,
     ).astype(np.float32)
-    component_ratios = _component_ratios(
-        separated,
-        n_fft=settings.n_fft,
-        hop_length=settings.hop_length,
-        frame_count=frame_count,
-    )
+    component_ratios = _component_ratios(separated)
     silence = (rms_db <= settings.silence_db).astype(np.float32)
 
     frame_rate = sample_rate / settings.hop_length
@@ -267,13 +182,9 @@ def extract_musical_features(
         np.concatenate(
             (
                 rms_db,
-                crest,
                 centroid,
-                bandwidth,
-                rolloff,
                 flatness,
                 flux,
-                pitch,
                 pitch_confidence,
                 component_ratios,
             ),
@@ -290,7 +201,6 @@ def extract_musical_features(
     compact_chroma_rows = aggregate_columns(chroma, block_size, reducer="mean")
     compact_chroma = np.asarray(compact_chroma_rows.T, dtype=np.float32)
     compact_chroma /= np.maximum(np.sum(compact_chroma, axis=0, keepdims=True), _EPSILON)
-    tonnetz = librosa.feature.tonnetz(chroma=compact_chroma).astype(np.float32)
     entropy = chroma_entropy(compact_chroma)[None, :]
     change = harmonic_change(compact_chroma)[None, :]
 
@@ -306,13 +216,9 @@ def extract_musical_features(
 
     columns = (
         "rms_db",
-        "crest_factor",
         "spectral_centroid_hz",
-        "spectral_bandwidth_hz",
-        "spectral_rolloff_hz",
         "spectral_flatness",
         "spectral_flux",
-        "predominant_pitch_hz",
         "pitch_confidence",
         "harmonic_ratio",
         "percussive_ratio",
@@ -322,20 +228,15 @@ def extract_musical_features(
         "silence_ratio",
         *(f"mfcc_{index + 1:02d}" for index in range(settings.n_mfcc)),
         *(f"chroma_{pitch_class:02d}" for pitch_class in range(12)),
-        *(f"tonnetz_{dimension + 1:02d}" for dimension in range(6)),
         "chroma_entropy",
         "harmonic_change",
         "spectral_roughness",
     )
     units = (
         "dB",
-        "ratio",
-        "Hz",
-        "Hz",
         "Hz",
         "ratio",
         "distance",
-        "Hz",
         "ratio",
         "ratio",
         "ratio",
@@ -345,7 +246,6 @@ def extract_musical_features(
         "ratio",
         *("coefficient" for _ in range(settings.n_mfcc)),
         *("probability" for _ in range(12)),
-        *("coordinate" for _ in range(6)),
         "normalized bits",
         "cosine distance",
         "roughness",
@@ -358,7 +258,6 @@ def extract_musical_features(
             compact_silence,
             compact_mfcc,
             compact_chroma_rows,
-            tonnetz.T,
             entropy.T,
             change.T,
             roughness,

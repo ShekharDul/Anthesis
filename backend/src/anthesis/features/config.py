@@ -11,10 +11,9 @@ class FeatureConfig:
 
     n_fft: int = 2_048
     hop_length: int = 1_024
-    n_mels: int = 64
-    n_mfcc: int = 13
+    n_mels: int = 40
+    n_mfcc: int = 6
     output_rate_hz: float = 2.0
-    rolloff_percent: float = 0.85
     silence_db: float = -45.0
     roughness_peak_count: int = 20
     roughness_min_hz: float = 40.0
@@ -29,8 +28,6 @@ class FeatureConfig:
             raise ValueError("expected 16 <= n_mels and 1 <= n_mfcc <= n_mels")
         if self.output_rate_hz <= 0:
             raise ValueError("output_rate_hz must be positive")
-        if not 0 < self.rolloff_percent < 1:
-            raise ValueError("rolloff_percent must be between zero and one")
         if self.silence_db >= 0:
             raise ValueError("silence_db must be negative")
         if self.roughness_peak_count < 2:

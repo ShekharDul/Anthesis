@@ -23,7 +23,7 @@ STRUCTURE_COLUMNS = (
     "percussive_ratio",
     "chroma_entropy",
     "harmonic_change",
-    *(f"mfcc_{index:02d}" for index in range(1, 14)),
+    *(f"mfcc_{index:02d}" for index in range(1, 7)),
     *(f"chroma_{index:02d}" for index in range(12)),
 )
 

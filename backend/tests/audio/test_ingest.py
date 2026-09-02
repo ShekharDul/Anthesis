@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -25,8 +26,8 @@ def test_load_audio_canonicalizes_stereo_signal_deterministically(tmp_path: Path
     first = load_audio(path)
     second = load_audio(path)
 
-    assert first.sample_rate == 22_050
-    assert 0.95 <= first.duration_seconds <= 1.15
+    assert first.sample_rate == 16_000
+    assert 0.95 <= first.duration_seconds <= 1.16
     assert np.max(np.abs(first.samples)) == pytest.approx(0.98, abs=1e-6)
     assert np.mean(first.samples) == pytest.approx(0, abs=1e-6)
     assert 0 < first.stereo_width < 1
@@ -61,3 +62,25 @@ def test_load_audio_enforces_source_duration_limit(tmp_path: Path) -> None:
 
     with pytest.raises(AudioLimitError, match="duration"):
         load_audio(path, config)
+
+
+def test_load_audio_uses_decoded_duration_when_container_metadata_is_wrong(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "misreported.wav"
+    time = np.arange(16_000, dtype=np.float64) / 16_000
+    _write_wave(path, np.sin(2 * np.pi * 220 * time), 16_000)
+    actual = sf.info(path)
+    misleading = SimpleNamespace(
+        format=actual.format,
+        subtype=actual.subtype,
+        samplerate=actual.samplerate,
+        channels=actual.channels,
+        frames=actual.frames * 3,
+    )
+    monkeypatch.setattr("anthesis.audio.ingest.sf.info", lambda _path: misleading)
+
+    audio = load_audio(path)
+
+    assert audio.source.frames == 16_000
+    assert audio.source.duration_seconds == pytest.approx(1.0)

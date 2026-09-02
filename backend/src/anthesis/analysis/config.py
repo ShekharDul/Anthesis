@@ -14,7 +14,7 @@ class StructureConfig:
     minimum_section_seconds: float = 4.0
     maximum_sections: int = 16
     minimum_peak_prominence: float = 0.05
-    recurrence_threshold: float = 0.80
+    recurrence_threshold: float = 0.75
 
     def __post_init__(self) -> None:
         if self.novelty_half_window_seconds <= 0 or self.novelty_smoothing_seconds < 0:
@@ -34,14 +34,14 @@ class FingerprintConfig:
     """Controls landmark extraction and constellation hashing."""
 
     n_fft: int = 2_048
-    hop_length: int = 512
+    hop_length: int = 1_024
     peak_neighborhood_frequency: int = 9
     peak_neighborhood_time: int = 7
-    peaks_per_second: int = 24
+    peaks_per_second: int = 12
     minimum_peak_db: float = -55.0
     minimum_pair_seconds: float = 0.10
     maximum_pair_seconds: float = 3.0
-    fanout: int = 5
+    fanout: int = 4
     signature_size: int = 128
 
     def __post_init__(self) -> None:

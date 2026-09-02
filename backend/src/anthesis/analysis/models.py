@@ -38,7 +38,7 @@ class StructureAnalysis:
     recurrence_score: float
     contrast_score: float
     complexity_score: float
-    version: str = "anthesis-structure-v2"
+    version: str = "anthesis-structure-v3"
 
     @property
     def boundaries_seconds(self) -> tuple[float, ...]:
@@ -83,7 +83,7 @@ class AcousticFingerprint:
     seed_hex: str
     exact_audio_digest: str
     duration_seconds: float
-    version: str = "anthesis-fingerprint-v1"
+    version: str = "anthesis-fingerprint-v2"
 
     def similarity(self, other: AcousticFingerprint) -> float:
         """Jaccard similarity of robust pair hashes, independent of timestamps."""

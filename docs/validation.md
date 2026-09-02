@@ -19,6 +19,20 @@ environment; it does not treat Windows-generated derived hashes as Linux golden
 values. This still detects nondeterminism and broken artifact integrity without
 mistaking legitimate numerical-backend variation for an algorithm regression.
 
+## Performance boundaries
+
+Audio decoding, spectral features, and chunked HPSS scale linearly with song
+duration. HPSS scratch space is bounded to 512 spectral frames. Landmark peaks
+are sorted once, then each anchor searches only a three-second target window;
+with fixed peak and fan-out limits this is near-linear rather than all-to-all.
+Structural self-similarity remains quadratic only on the compact 2 Hz timeline,
+which is capped by the eight-minute input limit.
+
+On the development reference machine, the previously problematic 17.4 MB MP3
+decodes to 2:23 of audio and completes analysis in about 12 seconds. Runtime is
+hardware-dependent, so this figure is a regression reference rather than an API
+guarantee.
+
 ## Input and resource controls
 
 - Browser uploads are streamed in 1 MiB chunks and stop at 100 MiB.
@@ -32,8 +46,10 @@ mistaking legitimate numerical-backend variation for an algorithm regression.
   bound raster memory.
 - The compact feature timeline and maximum genome trajectory size bound later
   structural and serialization work.
-- Harmonic separation and feature extraction reuse the same spectral matrices;
-  regression tests prevent accidental duplicate transforms.
+- Harmonic separation retains compact magnitudes rather than reconstructed
+  waveforms or complex spectra, and feature extraction reuses those matrices.
+- Fingerprint pairing searches only the configured musical target window, so
+  dense recordings remain near-linear instead of degrading quadratically.
 
 ## Trust boundaries
 

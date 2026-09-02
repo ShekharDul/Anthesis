@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import librosa
@@ -20,7 +20,7 @@ from anthesis.audio.errors import (
     SilentAudioError,
 )
 
-CANONICAL_AUDIO_VERSION = "anthesis-audio-v1"
+CANONICAL_AUDIO_VERSION = "anthesis-audio-v2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,11 +71,6 @@ def _source_info(path: Path, config: AudioPreprocessConfig) -> SourceAudioInfo:
     except (RuntimeError, TypeError, ValueError) as exc:
         raise AudioDecodeError(f"Could not inspect audio file: {path}") from exc
 
-    duration = info.frames / info.samplerate if info.samplerate else 0.0
-    if duration > config.max_duration_seconds:
-        raise AudioLimitError(
-            f"Audio duration is {duration:.2f}s; limit is {config.max_duration_seconds:.2f}s"
-        )
     if info.channels < 1 or info.samplerate < 1 or info.frames < 1:
         raise AudioDecodeError("Audio metadata contains no decodable signal")
 
@@ -86,7 +81,7 @@ def _source_info(path: Path, config: AudioPreprocessConfig) -> SourceAudioInfo:
         sample_rate=info.samplerate,
         channels=info.channels,
         frames=info.frames,
-        duration_seconds=duration,
+        duration_seconds=info.frames / info.samplerate,
         file_size_bytes=file_size,
     )
 
@@ -138,6 +133,17 @@ def load_audio(
     path = Path(audio_path).expanduser()
     source = _source_info(path, settings)
     decoded = _decode(path)
+    decoded_duration = decoded.shape[0] / source.sample_rate
+    if decoded_duration > settings.max_duration_seconds:
+        raise AudioLimitError(
+            f"Audio duration is {decoded_duration:.2f}s; "
+            f"limit is {settings.max_duration_seconds:.2f}s"
+        )
+    source = replace(
+        source,
+        frames=decoded.shape[0],
+        duration_seconds=decoded_duration,
+    )
     stereo_width = _measure_stereo_width(decoded)
 
     mono = np.mean(decoded, axis=1, dtype=np.float64)

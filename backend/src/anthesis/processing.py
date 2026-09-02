@@ -111,8 +111,20 @@ def analyze_file(
     audio = load_audio(audio_path, settings.audio)
     components = separate_harmonic_percussive(audio, settings.separation)
     features = extract_musical_features(audio, components, settings.features)
+    fingerprint_config = settings.analysis.fingerprint
+    fingerprint_magnitude = (
+        components.magnitude
+        if fingerprint_config.n_fft == components.n_fft
+        and fingerprint_config.hop_length == components.hop_length
+        else None
+    )
+    analysis = analyze_song(
+        audio,
+        features,
+        settings.analysis,
+        fingerprint_magnitude=fingerprint_magnitude,
+    )
     del components
-    analysis = analyze_song(audio, features, settings.analysis)
     genome = build_music_genome(audio, features, analysis, settings.genome)
     flower = map_genome_to_flower(genome)
     return AnalysisDocument(genome=genome, flower=flower)

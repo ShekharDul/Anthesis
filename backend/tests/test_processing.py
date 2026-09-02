@@ -10,11 +10,11 @@ from PIL import Image
 from anthesis.processing import GeneratedFlower, ProcessingConfig, generate_file
 from anthesis.rendering import RenderConfig
 
-EXPECTED_AUDIO_DIGEST = "126e9b6c001e303136d60cc74eafce552baa7ec0edc497942a19aac269d6c94a"
+EXPECTED_AUDIO_DIGEST = "666c23e787d51dc58a69aed27ea42b1e125a7f6d696f94b618ccb019449aea8e"
 
 
 def _write_music(path: Path) -> None:
-    sample_rate = 22_050
+    sample_rate = 16_000
     duration = 4.0
     time = np.arange(round(sample_rate * duration), dtype=np.float64) / sample_rate
     signal = 0.46 * np.sin(2.0 * np.pi * 220.0 * time)

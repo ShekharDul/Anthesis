@@ -220,7 +220,7 @@ export function App() {
 
   useEffect(() => {
     if (view !== "processing") return
-    const timer = window.setInterval(() => setStage((current) => Math.min(current + 1, 3)), 8000)
+    const timer = window.setInterval(() => setStage((current) => Math.min(current + 1, 3)), 5000)
     return () => window.clearInterval(timer)
   }, [view])
 

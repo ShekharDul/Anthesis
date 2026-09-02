@@ -18,18 +18,23 @@ from anthesis.audio import CanonicalAudio
 def _spectral_peaks(
     audio: CanonicalAudio,
     config: FingerprintConfig,
+    magnitude: NDArray[np.float32] | None = None,
 ) -> NDArray[np.float64]:
-    spectrum = np.abs(
-        librosa.stft(
-            audio.samples,
-            n_fft=config.n_fft,
-            hop_length=config.hop_length,
-            window="hann",
-            center=True,
-            pad_mode="constant",
+    if magnitude is None:
+        magnitude = np.asarray(
+            np.abs(
+                librosa.stft(
+                    audio.samples,
+                    n_fft=config.n_fft,
+                    hop_length=config.hop_length,
+                    window="hann",
+                    center=True,
+                    pad_mode="constant",
+                )
+            ),
+            dtype=np.float32,
         )
-    )
-    decibels = librosa.amplitude_to_db(spectrum, ref=np.max, top_db=80.0)
+    decibels = librosa.amplitude_to_db(magnitude, ref=np.max, top_db=80.0)
     neighborhood = maximum_filter(
         decibels,
         size=(config.peak_neighborhood_frequency, config.peak_neighborhood_time),
@@ -70,12 +75,16 @@ def _landmarks(
         round(config.maximum_pair_seconds * audio.sample_rate / config.hop_length),
     )
     result: list[Landmark] = []
+    peak_frames = peaks[:, 0]
     for anchor_index, anchor in enumerate(peaks):
-        delta = peaks[anchor_index + 1 :, 0] - anchor[0]
-        possible = np.flatnonzero((delta >= minimum_delta) & (delta <= maximum_delta))
-        if possible.size == 0:
+        first = max(
+            anchor_index + 1,
+            int(np.searchsorted(peak_frames, anchor[0] + minimum_delta, side="left")),
+        )
+        last = int(np.searchsorted(peak_frames, anchor[0] + maximum_delta, side="right"))
+        if first >= last:
             continue
-        candidates = peaks[anchor_index + 1 + possible]
+        candidates = peaks[first:last]
         order = np.lexsort((-candidates[:, 2], candidates[:, 0]))[: config.fanout]
         for target in candidates[order]:
             anchor_frame = int(anchor[0])
@@ -97,11 +106,13 @@ def _landmarks(
 def fingerprint_audio(
     audio: CanonicalAudio,
     config: FingerprintConfig | None = None,
+    *,
+    magnitude: NDArray[np.float32] | None = None,
 ) -> AcousticFingerprint:
     """Create a repeatable constellation fingerprint and flower seed."""
 
     settings = config or FingerprintConfig()
-    landmarks = _landmarks(_spectral_peaks(audio, settings), audio, settings)
+    landmarks = _landmarks(_spectral_peaks(audio, settings, magnitude), audio, settings)
     signature = tuple(
         sorted({landmark.hash32 for landmark in landmarks})[: settings.signature_size]
     )

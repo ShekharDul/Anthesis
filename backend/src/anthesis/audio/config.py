@@ -13,16 +13,16 @@ class AudioPreprocessConfig:
     tractable. Values are explicit so an analysis version can reproduce them.
     """
 
-    target_sample_rate: int = 22_050
+    target_sample_rate: int = 16_000
     min_duration_seconds: float = 1.0
-    max_duration_seconds: float = 15.0 * 60.0
+    max_duration_seconds: float = 8.0 * 60.0
     max_file_size_bytes: int = 512 * 1024 * 1024
     trim_top_db: float = 55.0
     trim_frame_length: int = 2_048
     trim_hop_length: int = 512
     peak_target: float = 0.98
     silence_epsilon: float = 1e-7
-    resample_type: str = "soxr_hq"
+    resample_type: str = "soxr_mq"
 
     def __post_init__(self) -> None:
         if self.target_sample_rate < 8_000:
@@ -52,6 +52,7 @@ class SeparationConfig:
     win_length: int = 2_048
     harmonic_kernel: int = 31
     percussive_kernel: int = 31
+    chunk_frames: int = 512
     power: float = 2.0
     margin: float = 1.0
 
@@ -64,6 +65,8 @@ class SeparationConfig:
             raise ValueError("HPSS kernels must contain at least three frames")
         if self.harmonic_kernel % 2 == 0 or self.percussive_kernel % 2 == 0:
             raise ValueError("HPSS kernels must be odd")
+        if self.chunk_frames < max(self.harmonic_kernel, self.percussive_kernel):
+            raise ValueError("chunk_frames must cover the HPSS kernels")
         if self.power <= 0:
             raise ValueError("power must be positive")
         if self.margin < 1:
