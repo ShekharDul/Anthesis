@@ -104,7 +104,6 @@ function ResultView({
       </section>
 
       <section className="reading-panel">
-        <p className="eyebrow">Your musical specimen</p>
         <h1 id="result-title">{titleCase(genome.dominant_affect)}</h1>
         <p className="result-file">Grown from <strong>{fileName}</strong></p>
 
@@ -116,7 +115,7 @@ function ResultView({
         </div>
 
         <div className="analysis-block">
-          <div className="section-heading"><h2>Expressive reading</h2><span>{Math.round(descriptors.confidence * 100)}% confidence</span></div>
+          <div className="section-heading"><h2>Expressive reading</h2></div>
           <Metric label="Valence" value={descriptors.valence} signed />
           <Metric label="Arousal" value={descriptors.arousal} />
           <Metric label="Tension" value={descriptors.tension} />

@@ -14,7 +14,7 @@ Its primary flow is select, understand, and keep the result.
    preserve the selected recording for retry.
 
 The result reading exposes key, mode, estimated tempo, expressive arc,
-duration, confidence, valence, arousal, tension, formal complexity, petal
+duration, valence, arousal, tension, formal complexity, petal
 traits, pigment, and detected song sections. It avoids claiming knowledge of a
 listener's private feelings.
 
